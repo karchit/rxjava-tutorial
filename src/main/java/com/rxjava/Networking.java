@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
-public class NetworkingExample1 {
+public class Networking {
 
-    private static final Logger log = LoggerFactory.getLogger(NetworkingExample1.class);
+    private static final Logger log = LoggerFactory.getLogger(Networking.class);
 
     public static void main(String[] args) {
 
@@ -22,11 +22,10 @@ public class NetworkingExample1 {
             GateBasedSynchronization gate = new GateBasedSynchronization();
 
             // Create two requests to our addition service.  The first will have a long delay
-            URI request1 = new URI("http://localhost:22221/addition?a=5&b=9&delay=4000");
+            URI request1 = new URI("http://localhost:22221/addition?a=5&b=9&delay=6000");
 
             // The second request will no have a delay.
             URI request2 = new URI("http://localhost:22221/addition?a=21&b=21&delay=0");
-            URI request3 = new URI("http://localhost:22221/addition?a=21&b=21&delay=0");
 
             // Use our HttpResponseObserverFactory to makeObservable an Observable that returns
             // the result of the call to the addition service for the first request.
@@ -41,10 +40,6 @@ public class NetworkingExample1 {
                     HttpResponseObserverFactory.additionRequestResponseObservable(request2)
                     .subscribeOn(Schedulers.io());
 
-            Observable<Integer> networkRequest3 =
-                    HttpResponseObserverFactory.additionRequestResponseObservable(request3)
-                    .subscribeOn(Schedulers.io());
-
             // We use the merge operator with maxConcurrency of 2 in order
             // to cause both networkRequest1 and networkRequest2 to be executed
             // simultaneously.  We want all of this on the IO threads.
@@ -52,9 +47,9 @@ public class NetworkingExample1 {
             Observable<Integer> responseStream = Observable.mergeArray(
                     2, 1, networkRequest1, networkRequest2)
                     .subscribeOn(Schedulers.io())
-                    .timeout(5L, TimeUnit.SECONDS );
+                    .timeout(5L, TimeUnit.SECONDS , Observable.just(-1));
 
-            // Now that we have our Observable chain, we can use our standard
+            // No that we have our Observable chain, we can use our standard
             // DemoSubscriber to cause it to execute.
             responseStream.subscribe(new DemoSubscriber<>(gate));
 
